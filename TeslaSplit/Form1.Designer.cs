@@ -42,6 +42,7 @@
             this.tbTitle = new System.Windows.Forms.TextBox();
             this.labelScrollCount = new System.Windows.Forms.Label();
             this.buttonReset = new System.Windows.Forms.Button();
+            this.labelSceneName = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // buttonStopStart
@@ -127,7 +128,7 @@
             // 
             this.labelScene.AutoSize = true;
             this.labelScene.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
-            this.labelScene.Location = new System.Drawing.Point(9, 95);
+            this.labelScene.Location = new System.Drawing.Point(9, 75);
             this.labelScene.Name = "labelScene";
             this.labelScene.Size = new System.Drawing.Size(86, 18);
             this.labelScene.TabIndex = 10;
@@ -137,7 +138,7 @@
             // 
             this.labelCheckpoint.AutoSize = true;
             this.labelCheckpoint.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
-            this.labelCheckpoint.Location = new System.Drawing.Point(9, 113);
+            this.labelCheckpoint.Location = new System.Drawing.Point(9, 111);
             this.labelCheckpoint.Name = "labelCheckpoint";
             this.labelCheckpoint.Size = new System.Drawing.Size(120, 18);
             this.labelCheckpoint.TabIndex = 11;
@@ -155,11 +156,12 @@
             // 
             // tbTitle
             // 
-            this.tbTitle.Location = new System.Drawing.Point(13, 42);
+            this.tbTitle.Location = new System.Drawing.Point(208, 41);
             this.tbTitle.Multiline = true;
             this.tbTitle.Name = "tbTitle";
             this.tbTitle.ReadOnly = true;
-            this.tbTitle.Size = new System.Drawing.Size(219, 50);
+            this.tbTitle.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.tbTitle.Size = new System.Drawing.Size(231, 294);
             this.tbTitle.TabIndex = 14;
             // 
             // labelScrollCount
@@ -175,7 +177,7 @@
             // buttonReset
             // 
             this.buttonReset.Enabled = false;
-            this.buttonReset.Location = new System.Drawing.Point(126, 11);
+            this.buttonReset.Location = new System.Drawing.Point(151, 12);
             this.buttonReset.Name = "buttonReset";
             this.buttonReset.Size = new System.Drawing.Size(106, 23);
             this.buttonReset.TabIndex = 16;
@@ -183,11 +185,22 @@
             this.buttonReset.UseVisualStyleBackColor = true;
             this.buttonReset.Click += new System.EventHandler(this.buttonReset_Click);
             // 
+            // labelSceneName
+            // 
+            this.labelSceneName.AutoSize = true;
+            this.labelSceneName.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelSceneName.Location = new System.Drawing.Point(9, 93);
+            this.labelSceneName.Name = "labelSceneName";
+            this.labelSceneName.Size = new System.Drawing.Size(128, 18);
+            this.labelSceneName.TabIndex = 17;
+            this.labelSceneName.Text = "labelSceneName";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(244, 347);
+            this.ClientSize = new System.Drawing.Size(451, 347);
+            this.Controls.Add(this.labelSceneName);
             this.Controls.Add(this.buttonReset);
             this.Controls.Add(this.labelScrollCount);
             this.Controls.Add(this.tbTitle);
@@ -227,6 +240,7 @@
         private System.Windows.Forms.TextBox tbTitle;
         private System.Windows.Forms.Label labelScrollCount;
         private System.Windows.Forms.Button buttonReset;
+        private System.Windows.Forms.Label labelSceneName;
     }
 }
 

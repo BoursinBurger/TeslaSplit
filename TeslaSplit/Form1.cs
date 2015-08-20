@@ -10,6 +10,7 @@ using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
 using WMPLib;
 using WindowsInput;
+using System.Text;
 
 namespace TeslaSplit
 {
@@ -19,12 +20,15 @@ namespace TeslaSplit
         private string previousText;
         private string savePath;
         private string splitHotkey;
+        private string resetHotkey;
         private string splitList;
         private bool splitFlag;
         private string[] splits;
         private int splitCounter;
         private short scrollCounter;
+        private string[] scenes;
         private WindowsMediaPlayer HamsterDance;
+        private StringBuilder sbText; 
 
         public Form1()
         {
@@ -34,6 +38,7 @@ namespace TeslaSplit
             splitList = "";
             tbTitle.Text = "";
             labelScene.Text = "";
+            labelSceneName.Text = "";
             labelCheckpoint.Text = "";
             labelGlove.Text = "";
             labelBlink.Text = "";
@@ -44,19 +49,23 @@ namespace TeslaSplit
             labelScrollCount.Text = "";
             labelBosses.Text = "";
             labelComplete.Text = "";
+            scenes = new[] { "Home", "Scales", "Rooftops", "Broken Bridge", "Chimneys", "Balconies", "Stave Church", "Moat", "Courtyard", "Classroom", "Levitation", "Pistons", "Chapel", "Barrier", "Trials", "Well", "Thunderbolt", "Iron Lice", "Magic Carpet", "Snakeway", "Fernus", "Maglev", "Hidey Hole", "Fernus", "Cooling Room", "Cages", "Magnetflies", "Grues", "Waterworks", "Waterworks", "Roots", "Act One", "Heartwood", "Maze", "Mural", "Ventilation", "Faradeus", "Shrine", "Wintergarden", "Wintergarden", "Wintergarden", "Wintergarden", "Wintergarden", "Wintergarden", "Storage", "Act Two", "Scrapyard", "Crusher", "Smelter", "Molten Pool", "Fireproof", "Forge", "Licemover", "Pipes", "Chokepoint", "Brazen Bull", "Magnetbridge", "Guardian", "Electromagnets", "Clerestory", "Oleg", "Act Three", "Control Room", "Wheeltrack", "Acrobatics", "Race", "Feast hall", "Happy Ending", "Magnetic Lift", "Magnetic Ball", "Fatal Attraction", "Surprise", "Alternation", "Grand Design", "Solomon Tesla", "Pinnacle", "Guerickes Orb", "Dodge This", "Deep Down", "Hidden Library", "Tower", "Tanngrisne", "Tanngnjost", "Bridge", "Room", "Stormfront", "Palace Stairs", "Downfall", "Passage", "Scrolls", "Dungeon", "Scrolls", "Secret Passage", "Grand Hall", "The King", "Cooler", "Assembler", "Forge", "Homage", "Crown Space", "Home", "Scales", "Rooftops", "Broken Bridge", "Chimneys", "Balconies", "Stave Church", "Moat", "Tower", "Tower", "Tower", "Tower", "Tower", "Tower" };
             HamsterDance = new WindowsMediaPlayer();
+            sbText = new StringBuilder();
+
 
             try
             {
                 // Read the app config settings
                 savePath = ConfigurationManager.AppSettings["SaveGamePath"];
                 splitHotkey = ConfigurationManager.AppSettings["SplitHotkey"];
+                resetHotkey = ConfigurationManager.AppSettings["ResetHotkey"];
                 splitList = ConfigurationManager.AppSettings["SplitList"];
 
                 // Set up the file watcher
                 fsw = new FileSystemWatcher
                 {
-                    Path = savePath,
+                    Path = CombinePaths(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), savePath),
                     NotifyFilter = NotifyFilters.LastWrite,
                     Filter = "SavedGame.asset",
                     IncludeSubdirectories = true
@@ -66,6 +75,7 @@ namespace TeslaSplit
             catch (Exception e)
             {
                 MessageBox.Show(String.Format("{0}: {1}", e.GetType(), e.Message));
+                Application.Exit();
             }
             finally
             {
@@ -97,6 +107,16 @@ namespace TeslaSplit
                 }
             }
         }
+
+        public static string CombinePaths(params string[] paths)
+        {
+            if (paths == null)
+            {
+                throw new ArgumentNullException("null paths");
+            }
+            return paths.Aggregate(Path.Combine);
+        }
+
 
         private void fsw_Changed(object source, FileSystemEventArgs eventArgs)
         {
@@ -135,26 +155,32 @@ namespace TeslaSplit
                 string[] lines = Regex.Split(currentText, "\r\n");
                 foreach (string line in lines)
                 {
+                    string l = line.Trim();
                     if (line.Contains("sceneIndex:"))
-                        labelScene.Text = line.Trim();
+                    {
+                        labelScene.Text = l;
+                        int sceneNumber = Int32.Parse(l.Substring(l.LastIndexOf(' ') + 1));
+                        if (sceneNumber < scenes.Count())
+                            labelSceneName.Text = scenes[sceneNumber];
+                    }
                     else if (line.Contains("checkpointIndex:"))
-                        labelCheckpoint.Text = line.Trim();
+                        labelCheckpoint.Text = l;
                     else if (line.Contains("glove:"))
-                        labelGlove.Text = line.Trim();
+                        labelGlove.Text = l;
                     else if (line.Contains("blink:"))
-                        labelBlink.Text = line.Trim();
+                        labelBlink.Text = l;
                     else if (line.Contains("suit:"))
-                        labelSuit.Text = line.Trim();
+                        labelSuit.Text = l;
                     else if (line.Contains("staff:"))
-                        labelStaff.Text = line.Trim();
+                        labelStaff.Text = l;
                     else if (line.Contains("openBarriers:"))
-                        labelBarriers.Text = line.Trim();
+                        labelBarriers.Text = l;
                     else if (line.Contains("orbsFound:"))
-                        labelOrbs.Text = line.Trim();
+                        labelOrbs.Text = l;
                     else if (line.Contains("defeatedBosses:"))
-                        labelBosses.Text = line.Trim();
+                        labelBosses.Text = l;
                     else if (line.Contains("gameComplete:"))
-                        labelComplete.Text = line.Trim();
+                        labelComplete.Text = l;
                 }
 
                 if (previousText == "")
@@ -178,6 +204,8 @@ namespace TeslaSplit
                     // Now analyze for splits
                     foreach (string lineText in result.Lines.Where(t => t.Type == ChangeType.Inserted).Select(line => line.Text.Trim()))
                     {
+                        sbText.AppendLine(String.Format("[{0}] {1}", DateTime.Now.ToString("s"), lineText));
+
                         if (currentSplit.Trim() == lineText)
                             SendSplit();
 
@@ -196,7 +224,7 @@ namespace TeslaSplit
                         // Play the mp3 during scenes 63, 64, 65, and stop upon reaching scene 98
                         if (lineText.Contains("sceneIndex: 63") && File.Exists("hamsterdance.mp3"))
                         {
-                            tbTitle.Text += "Hamster Dance!\r\n";
+                            sbText.AppendLine(String.Format("[{0}] {1}", DateTime.Now.ToString("s"), "Hamster Dance!"));
                             HamsterDance.URL = "hamsterdance.mp3";
                             HamsterDance.controls.play();
                         }
@@ -220,19 +248,23 @@ namespace TeslaSplit
                             && sceneCheckSplit[3] == checkSplit[1])
                             SendSplit();
                     }
-                    if (splitCounter < splits.Count())
-                        tbTitle.Text += String.Format("Next Split is {0}", splits[splitCounter]);
-                    else
+                    if (splitFlag)
                     {
-                        tbTitle.Text += "End of splits";
+                        sbText.AppendLine(splitCounter < splits.Count()
+                                                  ? String.Format("[{0}] Next Split is {1}", DateTime.Now.ToString("s"),
+                                                                  splits[splitCounter])
+                                                  : String.Format("[{0}] End of splits", DateTime.Now.ToString("s")));
                     }
+
                 }
+                tbTitle.AppendText(sbText.ToString());
                 previousText = currentText;
             }
 
             catch (Exception e)
             {
                 MessageBox.Show(String.Format("{0}: {1}", e.GetType(), e.Message));
+                Application.Exit();
             }
         }
 
@@ -253,7 +285,7 @@ namespace TeslaSplit
 
             splitFlag = true;
             splitCounter++;
-            tbTitle.Text = "SPLIT!\r\n";
+            sbText.AppendLine(String.Format("[{0}] {1}", DateTime.Now.ToString("s"), "Sending a Split"));
             VirtualKeyCode? vkc = VKCTranslate(splitHotkey);
             if (vkc == null)
                 return;
@@ -268,6 +300,7 @@ namespace TeslaSplit
             savePath = "";
             tbTitle.Text = "Reset!";
             labelScene.Text = "";
+            labelSceneName.Text = "";
             labelCheckpoint.Text = "";
             labelGlove.Text = "";
             labelBlink.Text = "";
@@ -281,6 +314,7 @@ namespace TeslaSplit
             splitCounter = 0;
             scrollCounter = 0;
             previousText = "";
+            sbText = new StringBuilder();
             buttonReset.Enabled = false;
             if (fsw.EnableRaisingEvents)
                 tbTitle.Text = String.Format("Watching the directory: {0}", fsw.Path);
