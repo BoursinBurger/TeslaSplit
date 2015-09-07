@@ -58,6 +58,7 @@
             this.checkBoxBoots = new System.Windows.Forms.CheckBox();
             this.checkBoxGlove = new System.Windows.Forms.CheckBox();
             this.labelItemSkip = new System.Windows.Forms.Label();
+            this.checkBoxTopMost = new System.Windows.Forms.CheckBox();
             this.groupUrn.SuspendLayout();
             this.groupConfig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize) (this.dgvSplits)).BeginInit();
@@ -394,11 +395,23 @@
             this.labelItemSkip.TabIndex = 0;
             this.labelItemSkip.Text = "Perform Item Animation Skip for these items:";
             // 
+            // checkBoxTopMost
+            // 
+            this.checkBoxTopMost.AutoSize = true;
+            this.checkBoxTopMost.Location = new System.Drawing.Point(285, 16);
+            this.checkBoxTopMost.Name = "checkBoxTopMost";
+            this.checkBoxTopMost.Size = new System.Drawing.Size(62, 17);
+            this.checkBoxTopMost.TabIndex = 21;
+            this.checkBoxTopMost.Text = "On Top";
+            this.checkBoxTopMost.UseVisualStyleBackColor = true;
+            this.checkBoxTopMost.CheckedChanged += new System.EventHandler(this.checkBoxTopMost_CheckedChanged);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(359, 504);
+            this.Controls.Add(this.checkBoxTopMost);
             this.Controls.Add(this.groupConfig);
             this.Controls.Add(this.groupUrn);
             this.Controls.Add(this.buttonReset);
@@ -413,6 +426,7 @@
             this.groupConfig.PerformLayout();
             ((System.ComponentModel.ISupportInitialize) (this.dgvSplits)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -448,6 +462,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button buttonDeleteList;
         private System.Windows.Forms.Button buttonAddList;
+        private System.Windows.Forms.CheckBox checkBoxTopMost;
     }
 }
 
