@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Configuration;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using DiffPlex;
-using DiffPlex.DiffBuilder;
-using DiffPlex.DiffBuilder.Model;
 using Microsoft.Win32;
 using WMPLib;
 using WindowsInput;
@@ -25,7 +23,7 @@ namespace TeslaSplit
         private string configLegacySavePath;
         private string configCloudSavePath;
         private string configSplitHotkey;
-        private string configResetEvent;
+        private string configResetEvents;
         private string configMapHotkey;
         private string configSplitList;
         private string configItemAnimationSkipGlove;
@@ -38,14 +36,21 @@ namespace TeslaSplit
         private string[] splits;
         private int splitCounter;
         private short scrollCounter;
+        private int sceneIndex;
+        private int checkpointIndex;
         private string[] scenes;
         private List<string> pickups;
         private WindowsMediaPlayer HamsterDance;
         private StringBuilder sbText;
         private List<SplitList> ListOfSplitLists;
+        private List<string> ListOfResetEvents;
         private int selectedSplitsIndex;
         private Configuration config;
 
+        private FormKeywords frmKeywords = null;
+        private FormScenes frmScenes = null;
+        private FormSplitList frmSplitList = null;
+        
         public FormMain()
         {
             InitializeComponent();
@@ -85,7 +90,7 @@ namespace TeslaSplit
                 configLegacySavePath = config.AppSettings.Settings["LegacySavePath"].Value;
                 configCloudSavePath = config.AppSettings.Settings["CloudSavePath"].Value;
                 configSplitHotkey = config.AppSettings.Settings["SplitHotkey"].Value;
-                configResetEvent = config.AppSettings.Settings["ResetEvent"].Value;
+                configResetEvents = config.AppSettings.Settings["ResetEvents"].Value;
                 configMapHotkey = config.AppSettings.Settings["mapHotkey"].Value;
                 configSplitList = config.AppSettings.Settings["SplitList"].Value;
                 configSelectedSplitsIndex = config.AppSettings.Settings["SelectedSplitsIndex"].Value;
@@ -95,16 +100,21 @@ namespace TeslaSplit
                 configItemAnimationSkipStaff = config.AppSettings.Settings["ItemAnimationSkipStaff"].Value;
                 
                 // Set up the file watchers
-                fswLegacy = new FileSystemWatcher
+                string combinedLegacyPath =
+                    CombinePaths(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        configLegacySavePath);
+                if (Directory.Exists(combinedLegacyPath))
                 {
-                        Path =
-                                CombinePaths(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                                             configLegacySavePath),
-                        NotifyFilter = NotifyFilters.LastWrite,
-                        Filter = "SavedGame.asset",
-                        IncludeSubdirectories = true
-                };
-                fswLegacy.Changed += FileWatcherTrigger;
+                    fswLegacy = new FileSystemWatcher
+                                {
+                                    Path = combinedLegacyPath,
+                                    NotifyFilter = NotifyFilters.LastWrite,
+                                    Filter = "SavedGame.asset",
+                                    IncludeSubdirectories = true,
+                                    EnableRaisingEvents = false
+                                };
+                    fswLegacy.Changed += FileWatcherTrigger;
+                }
 
                 RegistryKey regKey = Registry.CurrentUser;
                 regKey = regKey.OpenSubKey(@"Software\Valve\Steam");
@@ -112,18 +122,24 @@ namespace TeslaSplit
                 if (regKey != null)
                 {
                     string steamPath = regKey.GetValue("SteamPath").ToString();
-                    
-                    fswCloud = new FileSystemWatcher
+                    string combinedSteamPath = CombinePaths(steamPath, configCloudSavePath);
+
+                    if (Directory.Exists(combinedSteamPath))
                     {
-                            Path = CombinePaths(steamPath, configCloudSavePath),
-                            NotifyFilter = NotifyFilters.LastWrite,
-                            Filter = "SavedGame.asset",
-                            IncludeSubdirectories = true
-                    };
-                    fswCloud.Changed += FileWatcherTrigger;
+                        fswCloud = new FileSystemWatcher
+                                   {
+                                       Path = combinedSteamPath,
+                                       NotifyFilter = NotifyFilters.LastWrite,
+                                       Filter = "SavedGame.asset",
+                                       IncludeSubdirectories = true,
+                                       EnableRaisingEvents = false
+                                   };
+                        fswCloud.Changed += FileWatcherTrigger;
+                    }
                 }
 
                 ListOfSplitLists = new List<SplitList>();
+                ListOfResetEvents = new List<string>();
 
                 // If the app config has issues, report them.
                 if (configLegacySavePath == "")
@@ -160,6 +176,8 @@ namespace TeslaSplit
 
                     }
 
+                    ListOfResetEvents = configResetEvents.Split(',').Select(s => s.Trim()).ToList();
+
                     splitCounter = 0;
                     scrollCounter = 0;
                     if (!Int32.TryParse(configSelectedSplitsIndex, out selectedSplitsIndex))
@@ -171,7 +189,6 @@ namespace TeslaSplit
                     checkBoxStaff.Checked = configItemAnimationSkipStaff == "true";
 
                     previousText = "";
-                    fswLegacy.EnableRaisingEvents = false;
                     groupUrn.Visible = false;
                     ControlsDelegate.SetText(this, buttonStopStart, "Start Watching");
 
@@ -181,7 +198,7 @@ namespace TeslaSplit
             }
             catch (Exception e)
             {
-                MessageBox.Show(String.Format("{0}: {1}", e.GetType(), e.Message));
+                MessageBox.Show(String.Format("{0}: {1}", e.GetType(), e.Message), "TeslaSplit - App Config Exception");
                 Application.Exit();
             }
         }
@@ -213,28 +230,35 @@ namespace TeslaSplit
                 bool content = false;
                 while (!content)
                 {
-                    using (FileStream fs = new FileStream(eventArgs.FullPath, FileMode.Open, FileAccess.Read,
-                                                          FileShare.ReadWrite))
-                    using (StreamReader sr = new StreamReader(fs))
-                        currentText = sr.ReadToEnd();
+                    // Try and open the file until we can read it
+                    try
+                    {
+                        using (FileStream fs = new FileStream(eventArgs.FullPath, FileMode.Open, FileAccess.Read,
+                            FileShare.ReadWrite))
+                        using (StreamReader sr = new StreamReader(fs))
+                            currentText = sr.ReadToEnd();
 
-                    // If my stream has data, then escape the while loop.
-                    // Otherwise, wait a little bit for file I/O and try again.
-                    if (currentText.Length > 100)
-                        content = true;
-                    else
-                        Thread.Sleep(50);
-
+                        // If my stream has data, then escape the while loop.
+                        // Otherwise, wait a little bit for file I/O and try again.
+                        if (currentText.Length > 100)
+                            content = true;
+                        else
+                            Thread.Sleep(10);
+                    }
+                    catch (IOException)
+                    {
+                        // The file read failed. Wait a tick and try it again.
+                        Thread.Sleep(10);
+                    }
                 }
 
                 // Before parsing currentText for split events, scan it for evidence of a new run.
                 // Possible triggers: 
                 // openBarriers: 0
                 // openBarriers: 262144
-                if (currentText.Contains(configResetEvent))
-                {
-                    DoReset(String.Format("Reset event [{0}] detected!\r\nSplits have been reset!", configResetEvent));
-                }
+                List<string> resets = ListOfResetEvents.Where(i => currentText.Contains(i)).ToList();
+                if (resets.Any())
+                    DoReset(String.Format("Reset event [{0}] detected!\r\nSplits have been reset!", resets.First()));
 
                 if (previousText == "")
                 {
@@ -253,65 +277,84 @@ namespace TeslaSplit
                 // Otherwise, continue an ongoing run
                 string currentSplit = splits[splitCounter];
                 splitFlag = false;
+                List<string> currentList = Regex.Split(currentText, "\r\n").Select(a => a.Trim()).ToList();
 
                 // Get differences between previousText and currentText
-                Differ d = new Differ();
-                InlineDiffBuilder idb = new InlineDiffBuilder(d);
-                var result = idb.BuildDiffModel(previousText, currentText);
-
-                // Now analyze for splits
-                foreach (
-                        string lineText in
-                                result.Lines.Where(t => t.Type == ChangeType.Inserted).Select(line => line.Text.Trim()))
+                if (previousText != "")
                 {
-                    // Log the event
-                    sbText.PrependLine(String.Format("[{0}] {1}", DateTime.Now.ToString("s"), lineText));
+                    List<string> previousList = Regex.Split(previousText, "\r\n").Select(a => a.Trim()).ToList();
+                    var differences = currentList.Except(previousList);
 
-                    // Check for opt-in pickup skip events and perform the skip if they occur
-                    if (pickups.Contains(lineText))
-                        SendPickupSkip();
-
-                    // If the split event is an exact text match on the line, split
-                    if (currentSplit.Trim() == lineText)
-                        SendSplit();
-
-                            // CollectScroll and ScrollCount split events
-                    else if (lineText.Contains("orbsFound:") && lineText != "orbsFound:")
+                    foreach (string lineText in differences)
                     {
-                        scrollCounter++;
-                        ControlsDelegate.SetText(this, labelScrollCount,
-                                                 String.Format("Scrolls Collected: {0}", scrollCounter));
-                        if (currentSplit == "CollectScroll" || currentSplit == "ScrollCount: " + scrollCounter)
+                        // Log the event
+
+                        // If this is a sceneIndex event, then parse the sceneIndex and find the scene name
+                        bool parsed = false;
+                        if (lineText.Contains("sceneIndex:"))
+                        {
+                            parsed = Int32.TryParse(lineText.Substring(lineText.LastIndexOf(' ') + 1), out sceneIndex);
+                            if (parsed && sceneIndex < scenes.Count() && sceneIndex >= 0)
+                                sbText.PrependLine(String.Format("[{0}] {1} - {2}", DateTime.Now.ToString("s"), lineText, scenes[sceneIndex]));
+                            else
+                                parsed = false;
+                        }
+                        // If this isn't a sceneIndex event (or parsing failed) then just print the event
+                        if (!parsed)
+                            sbText.PrependLine(String.Format("[{0}] {1}", DateTime.Now.ToString("s"), lineText));
+
+                        // Update checkpointIndex
+                        if (lineText.Contains("checkpointIndex:"))
+                        {
+                            Int32.TryParse(lineText.Substring(lineText.LastIndexOf(' ') + 1), out checkpointIndex);
+                        }
+
+                        // Check for opt-in pickup skip events and perform the skip if they occur
+                        if (pickups.Contains(lineText))
+                            SendPickupSkip();
+
+                        // If the split event is an exact text match on the line, send a split
+                        if (currentSplit.Trim() == lineText)
                             SendSplit();
-                    }
 
-                            // BarrierChange split event
-                    else if (lineText.Contains("openBarriers:") && currentSplit == "BarrierChange")
-                        SendSplit();
+                        // CollectScroll and ScrollCount split events
+                        else if (lineText.Contains("orbsFound:") && lineText != "orbsFound:")
+                        {
+                            scrollCounter++;
+                            ControlsDelegate.SetText(this, labelScrollCount,
+                                String.Format("Scrolls Collected: {0}", scrollCounter));
+                            if (currentSplit == "CollectScroll" || currentSplit == "ScrollCount: " + scrollCounter)
+                                SendSplit();
+                        }
 
-                            // DefeatedBoss split event
-                    else if (lineText.Contains("defeatedBosses:") && currentSplit == "DefeatedBoss")
-                        SendSplit();
+                        // BarrierChange split event
+                        else if (lineText.Contains("openBarriers:") && currentSplit == "BarrierChange")
+                            SendSplit();
 
-                            // ItemPickup split event
-                    else if ((lineText.Contains("glove: 1")
-                              || lineText.Contains("blink: 1")
-                              || lineText.Contains("suit: 1")
-                              || lineText.Contains("staff: 1"))
-                             && currentSplit == "ItemPickup")
-                        SendSplit();
+                        // DefeatedBoss split event
+                        else if (lineText.Contains("defeatedBosses:") && currentSplit == "DefeatedBoss")
+                            SendSplit();
 
-                    // Hamster Dance Easter Egg!
-                    // Play the mp3 during scenes 63, 64, 65, and stop upon reaching scene 98
-                    if (lineText.Contains("sceneIndex: 63") && File.Exists("hamsterdance.mp3"))
-                    {
-                        sbText.PrependLine(String.Format("[{0}] {1}", DateTime.Now.ToString("s"), "Hamster Dance!"));
-                        HamsterDance.URL = "hamsterdance.mp3";
-                        HamsterDance.controls.play();
-                    }
-                    if (lineText.Contains("sceneIndex: 98") && HamsterDance.playState == WMPPlayState.wmppsPlaying)
-                    {
-                        HamsterDance.controls.stop();
+                        // ItemPickup split event
+                        else if ((lineText.Contains("glove: 1")
+                                  || lineText.Contains("blink: 1")
+                                  || lineText.Contains("suit: 1")
+                                  || lineText.Contains("staff: 1"))
+                                 && currentSplit == "ItemPickup")
+                            SendSplit();
+
+                        // Hamster Dance Easter Egg!
+                        // Play the mp3 during scenes 63, 64, 65, and stop upon reaching scene 98
+                        if (lineText.Contains("sceneIndex: 63") && File.Exists("hamsterdance.mp3"))
+                        {
+                            sbText.PrependLine(String.Format("[{0}] {1}", DateTime.Now.ToString("s"), "Hamster Dance!"));
+                            HamsterDance.URL = "hamsterdance.mp3";
+                            HamsterDance.controls.play();
+                        }
+                        if (lineText.Contains("sceneIndex: 98") && HamsterDance.playState == WMPPlayState.wmppsPlaying)
+                        {
+                            HamsterDance.controls.stop();
+                        }
                     }
                 }
 
@@ -319,14 +362,10 @@ namespace TeslaSplit
                 if (currentSplit.Contains("Scene") && currentSplit.Contains("CheckPoint"))
                 {
                     string[] sceneCheckSplit = Regex.Split(currentSplit, @"\W+");
-                    string[] sceneSplit = Regex.Split(labelScene.Text, @"\W+");
-                    string[] checkSplit = Regex.Split(labelCheckpoint.Text, @"\W+");
 
                     if (sceneCheckSplit.Count() == 4
-                        && sceneSplit.Count() == 2
-                        && checkSplit.Count() == 2
-                        && sceneCheckSplit[1] == sceneSplit[1]
-                        && sceneCheckSplit[3] == checkSplit[1])
+                        && sceneCheckSplit[1] == sceneIndex.ToString()
+                        && sceneCheckSplit[3] == checkpointIndex.ToString())
                         SendSplit();
                 }
 
@@ -339,94 +378,100 @@ namespace TeslaSplit
                                                                             : "End of splits"));
                 }
 
-
-
                 buttonReset.Enabled = true;
 
                 // Populate labels
-                string[] lines = Regex.Split(currentText, "\r\n");
-                foreach (string line in lines)
+                ControlsDelegate.SetText(this, labelScene, String.Format("sceneIndex: {0} - {1}", sceneIndex, scenes[sceneIndex]));
+                ControlsDelegate.SetText(this, labelCheckpoint, String.Format("checkpointIndex: {0}", checkpointIndex));
+                ControlsDelegate.SetText(this, tbTitle, sbText.ToString());
+
+                foreach (string line in currentList)
                 {
-                    string l = line.Trim();
-
                     // The switch statement won't work with line.Contains, so we gotta do this the ugly way.
-
-                    if (line.Contains("sceneIndex:"))
-                    {
-                        int sceneNumber = Int32.Parse(l.Substring(l.LastIndexOf(' ') + 1));
-                        if (sceneNumber < scenes.Count())
-                            ControlsDelegate.SetText(this, labelScene,
-                                                     String.Format("{0} - {1}", l, scenes[sceneNumber]));
-                    }
-                    else if (line.Contains("checkpointIndex:"))
-                        ControlsDelegate.SetText(this, labelCheckpoint, l);
-                    else if (line.Contains("glove:"))
-                        ControlsDelegate.SetText(this, labelGlove, l);
+                    if (line.Contains("glove:"))
+                        ControlsDelegate.SetText(this, labelGlove, line);
                     else if (line.Contains("blink:"))
-                        ControlsDelegate.SetText(this, labelBlink, l);
+                        ControlsDelegate.SetText(this, labelBlink, line);
                     else if (line.Contains("suit:"))
-                        ControlsDelegate.SetText(this, labelSuit, l);
+                        ControlsDelegate.SetText(this, labelSuit, line);
                     else if (line.Contains("staff:"))
-                        ControlsDelegate.SetText(this, labelStaff, l);
+                        ControlsDelegate.SetText(this, labelStaff, line);
                     else if (line.Contains("openBarriers:"))
-                        ControlsDelegate.SetText(this, labelBarriers, l);
+                        ControlsDelegate.SetText(this, labelBarriers, line);
                     else if (line.Contains("orbsFound:"))
-                        ControlsDelegate.SetText(this, labelOrbs, l);
+                        ControlsDelegate.SetText(this, labelOrbs, line);
                     else if (line.Contains("defeatedBosses:"))
-                        ControlsDelegate.SetText(this, labelBosses, l);
+                        ControlsDelegate.SetText(this, labelBosses, line);
                     else if (line.Contains("gameComplete:"))
-                        ControlsDelegate.SetText(this, labelComplete, l);
+                        ControlsDelegate.SetText(this, labelComplete, line);
                 }
 
-
-                ControlsDelegate.SetText(this, tbTitle, sbText.ToString());
                 previousText = currentText;
             }
 
             catch (Exception e)
             {
-                MessageBox.Show(String.Format("{0}: {1}", e.GetType(), e.Message));
+                MessageBox.Show(String.Format("{0}: {1}", e.GetType(), e.Message), "TeslaSplit - File Watcher Exception");
                 Application.Exit();
             }
         }
 
         private void button_Click(object sender, EventArgs e)
         {
-            bool flip = !fswLegacy.EnableRaisingEvents;
-            fswLegacy.EnableRaisingEvents = flip;
+            bool flip = false;
+            if (fswLegacy != null)
+            {
+                flip = !fswLegacy.EnableRaisingEvents;
+            }
+            else if (fswCloud != null)
+            {
+                flip = !fswCloud.EnableRaisingEvents;
+            }
+
+            if (fswLegacy != null)
+                fswLegacy.EnableRaisingEvents = flip;
             if (fswCloud != null)
                 fswCloud.EnableRaisingEvents = flip;
+
             ControlsDelegate.SetText(this, buttonStopStart, flip ? "Stop Watching" : "Start Watching");
-            ControlsDelegate.SetText(this, tbTitle, flip ? String.Format("Watching Save Directories:\r\n{0}\r\n{1}", fswLegacy.Path, fswCloud == null ? "" : fswCloud.Path) : "Stopped");
+            if (fswLegacy != null || fswCloud != null)
+            {
+                ControlsDelegate.SetText(this, tbTitle,
+                    flip
+                        ? String.Format("Watching Save Directories:\r\n{0}\r\n{1}",
+                            fswCloud == null ? "" : fswLegacy.Path, fswCloud == null ? "" : fswCloud.Path)
+                        : "Stopped");
+            }
+            else
+                MessageBox.Show(
+                    "TeslaSplit is not able to start watching because it does not look like Teslagrad is installed.",
+                    "TeslaSplit");
             groupConfig.Visible = !flip;
             groupUrn.Visible = flip;
 
-            if (HamsterDance.playState == WMPPlayState.wmppsPlaying)
-                HamsterDance.controls.stop();
+            if (flip)
+            {
+                // Set selected split list
+                splitCounter = 0;
+                scrollCounter = 0;
+                ControlsDelegate.SetText(this, groupUrn, ListOfSplitLists[selectedSplitsIndex].Name);
+                splits = ListOfSplitLists[selectedSplitsIndex].Splits;
 
-            if (!flip)
-                return;
-           
-            // Set selected split list
-            splitCounter = 0;
-            scrollCounter = 0;
-            ControlsDelegate.SetText(this, groupUrn, ListOfSplitLists[selectedSplitsIndex].Name);
-            splits = ListOfSplitLists[selectedSplitsIndex].Splits;
+                // Set pickups list for Item Animation Skip
+                pickups = new List<string>();
+                if (checkBoxGlove.Checked)
+                    pickups.Add("glove: 1");
+                if (checkBoxBoots.Checked)
+                    pickups.Add("blink: 1");
+                if (checkBoxCloak.Checked)
+                    pickups.Add("suit: 1");
+                if (checkBoxStaff.Checked)
+                    pickups.Add("staff: 1");
 
-            // Set pickups list for Item Animation Skip
-            pickups = new List<string>();
-            if (checkBoxGlove.Checked)
-                pickups.Add("glove: 1");
-            if (checkBoxBoots.Checked)
-                pickups.Add("blink: 1");
-            if (checkBoxCloak.Checked)
-                pickups.Add("suit: 1");
-            if (checkBoxStaff.Checked)
-                pickups.Add("staff: 1");
-
-            // Save config changes to app.config file
-            SaveConfig();
-
+                // Save config changes to app.config file
+                SaveConfig();
+            }
+            DoReset();
         }
 
         private void SaveConfig()
@@ -511,7 +556,7 @@ namespace TeslaSplit
             DoReset("Splits Reset!");
         }
 
-        private void DoReset(string ResetReason = "")
+        private void DoReset(string resetReason = "")
         {
             ControlsDelegate.SetText(this, tbTitle, "");
             ControlsDelegate.SetText(this, labelNextSplit, "");
@@ -528,11 +573,15 @@ namespace TeslaSplit
             ControlsDelegate.SetText(this, labelComplete, "");
             splitCounter = 0;
             scrollCounter = 0;
+            sceneIndex = 0;
+            checkpointIndex = 0;
             previousText = "";
-            sbText = new StringBuilder(ResetReason);
-            sbText.PrependLine(String.Format("Watching Save Directories:\r\n{0}\r\n{1}", fswLegacy.Path, fswCloud == null ? "" : fswCloud.Path));
+            sbText = new StringBuilder(resetReason);
+            sbText.PrependLine(String.Format("Watching Save Directories:\r\n{0}\r\n{1}", fswLegacy == null ? "" : fswLegacy.Path, fswCloud == null ? "" : fswCloud.Path));
             buttonReset.Enabled = false;
-            if (fswLegacy.EnableRaisingEvents)
+            if (fswLegacy != null && fswLegacy.EnableRaisingEvents)
+                ControlsDelegate.SetText(this, tbTitle, sbText.ToString());
+            else if (fswCloud != null && fswCloud.EnableRaisingEvents)
                 ControlsDelegate.SetText(this, tbTitle, sbText.ToString());
 
             if (HamsterDance.playState == WMPPlayState.wmppsPlaying)
@@ -1397,6 +1446,61 @@ namespace TeslaSplit
         private void checkBoxTopMost_CheckedChanged(object sender, EventArgs e)
         {
             TopMost = checkBoxTopMost.Checked;
+        }
+
+        private bool CheckOpened(string name)
+        {
+            FormCollection fc = Application.OpenForms;
+
+            return fc.Cast<Form>().Any(frm => frm.Text == name);
+        }
+
+        private void buttonSplitList_Click(object sender, EventArgs e)
+        {
+            if (frmSplitList == null || frmSplitList.Text == "")
+            {
+                frmSplitList = new FormSplitList();
+                frmSplitList.Show();
+            }
+            else if (CheckOpened(frmSplitList.Text))
+            {
+                frmSplitList.Show();
+                frmSplitList.Focus();
+            }
+        }
+
+        private void buttonKeywords_Click(object sender, EventArgs e)
+        {
+            if (frmKeywords == null || frmKeywords.Text == "")
+            {
+                frmKeywords = new FormKeywords();
+                frmKeywords.Show();
+            }
+            else if (CheckOpened(frmKeywords.Text))
+            {
+                frmKeywords.Show();
+                frmKeywords.Focus();
+            }
+        }
+
+        private void buttonScenes_Click(object sender, EventArgs e)
+        {
+            if (frmScenes == null || frmScenes.Text == "")
+            {
+                DataTable dt = new DataTable();
+                dt.Columns.Add("SceneIndex", typeof (int));
+                dt.Columns.Add("Room Name", typeof (string));
+                for (int x = 0; x < scenes.Count(); x++)
+                    dt.Rows.Add(x, scenes[x]);
+
+                frmScenes = new FormScenes(dt);
+                frmScenes.Show();
+            }
+            else if (CheckOpened(frmScenes.Text))
+            {
+                frmScenes.Show();
+                frmScenes.Focus();
+            }
         }
     }
 

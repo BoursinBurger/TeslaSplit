@@ -117,10 +117,80 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="Column1.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="Column1.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
+  <data name="textBox1.Text" xml:space="preserve">
+    <value>These are the keyword events you can use in your Split List:
+
+sceneIndex: ###
+  This is the room number you are currently in.
+  Use a specific sceneIndex to split upon entering that room.
+  Please refer to the Scenes help to see what scene corresponds to which room.
+  
+checkpointIndex: ##
+  This is the checkpoint number within your current room.
+  Use a specific checkpointIndex to split upon attaining it.
+  
+Scene: ### CheckPoint: ##
+  A combination of sceneIndex and checkpointIndex.
+  This will split on the specified scene AND checkpoint.
+  
+orbsFound: xxxxxxxx
+  This is the code for the current list of collected scrolls.
+  If you know the specific code to watch for, this will split upon attaining it.
+  
+ScrollCount: ##
+  While collecting scrolls, a program counter will increment.
+  This will split when the total collected reaches the listed number.
+  
+CollectScroll
+  This will split when the scroll counter increases.
+  
+openBarriers: ########
+  This is the hash for the list of opened doors.
+  If you know the specific hash to watch for, this will split upon attaining it.
+
+openBarriers: 0
+  This value is briefly set at the beginning of the game at the end of the opening cutscene.
+  Start with this at the beginning of your split list if you want to start the timer automatically.
+
+BarrierChange
+  This will split when openBarriers changes its value.
+  
+glove: 1
+  This will split upon collecting the glove.
+  
+blink: 1
+  This will split upon collecting the boots.
+  
+suit: 1
+  This will split upon collecting the cloak.
+  
+staff: 1
+  This will split upon collecting the staff.
+  
+ItemPickup
+  This will split upon collecting the glove, boots, cloak, or staff.
+
+defeatedBosses: 1
+  This will split when Fernus is defeated.
+  
+defeatedBosses: 3
+  This will split when Faradeus is defeated.
+  
+defeatedBosses: 7
+  This will split when Oleg is defeated.
+  
+defeatedBosses: 15
+  This will split when Guerickes Orb is defeated.
+
+Note: The numbers above will only work if the bosses are defeated in the intended order.
+defeatedBosses assigns each boss a number. Fernus is 1, Faradeus is 2, Oleg is 4, and Guerickes Orb is 8.
+Add the numbers of the defeated bosses together. For example if you skip Faradeus, then the split for Oleg
+becomes "defeatedBosses: 5" and Guerickes Orb becomes "defeatedBosses: 13." But to make things simpler...
+
+DefeatedBoss
+  This will split when defeatedBosses changes its value.
+
+gameComplete: 1
+  This will split upon returning to the main menu after the Ende.</value>
+  </data>
 </root>

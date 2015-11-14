@@ -46,6 +46,10 @@
             this.groupUrn = new System.Windows.Forms.GroupBox();
             this.label3 = new System.Windows.Forms.Label();
             this.groupConfig = new System.Windows.Forms.GroupBox();
+            this.groupBoxHelp = new System.Windows.Forms.GroupBox();
+            this.buttonScenes = new System.Windows.Forms.Button();
+            this.buttonKeywords = new System.Windows.Forms.Button();
+            this.buttonSplitList = new System.Windows.Forms.Button();
             this.buttonDeleteList = new System.Windows.Forms.Button();
             this.buttonAddList = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
@@ -61,7 +65,8 @@
             this.checkBoxTopMost = new System.Windows.Forms.CheckBox();
             this.groupUrn.SuspendLayout();
             this.groupConfig.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.dgvSplits)).BeginInit();
+            this.groupBoxHelp.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvSplits)).BeginInit();
             this.SuspendLayout();
             // 
             // buttonStopStart
@@ -76,7 +81,7 @@
             // labelGlove
             // 
             this.labelGlove.AutoSize = true;
-            this.labelGlove.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelGlove.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelGlove.Location = new System.Drawing.Point(7, 288);
             this.labelGlove.Name = "labelGlove";
             this.labelGlove.Size = new System.Drawing.Size(81, 18);
@@ -86,7 +91,7 @@
             // labelBlink
             // 
             this.labelBlink.AutoSize = true;
-            this.labelBlink.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelBlink.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelBlink.Location = new System.Drawing.Point(94, 288);
             this.labelBlink.Name = "labelBlink";
             this.labelBlink.Size = new System.Drawing.Size(75, 18);
@@ -96,7 +101,7 @@
             // labelSuit
             // 
             this.labelSuit.AutoSize = true;
-            this.labelSuit.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelSuit.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelSuit.Location = new System.Drawing.Point(175, 288);
             this.labelSuit.Name = "labelSuit";
             this.labelSuit.Size = new System.Drawing.Size(68, 18);
@@ -106,7 +111,7 @@
             // labelStaff
             // 
             this.labelStaff.AutoSize = true;
-            this.labelStaff.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelStaff.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelStaff.Location = new System.Drawing.Point(249, 288);
             this.labelStaff.Name = "labelStaff";
             this.labelStaff.Size = new System.Drawing.Size(73, 18);
@@ -116,7 +121,7 @@
             // labelBosses
             // 
             this.labelBosses.AutoSize = true;
-            this.labelBosses.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelBosses.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelBosses.Location = new System.Drawing.Point(7, 386);
             this.labelBosses.Name = "labelBosses";
             this.labelBosses.Size = new System.Drawing.Size(94, 18);
@@ -126,7 +131,7 @@
             // labelBarriers
             // 
             this.labelBarriers.AutoSize = true;
-            this.labelBarriers.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelBarriers.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelBarriers.Location = new System.Drawing.Point(7, 321);
             this.labelBarriers.Name = "labelBarriers";
             this.labelBarriers.Size = new System.Drawing.Size(97, 18);
@@ -136,7 +141,7 @@
             // labelOrbs
             // 
             this.labelOrbs.AutoSize = true;
-            this.labelOrbs.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelOrbs.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelOrbs.Location = new System.Drawing.Point(7, 339);
             this.labelOrbs.Name = "labelOrbs";
             this.labelOrbs.Size = new System.Drawing.Size(75, 18);
@@ -146,7 +151,7 @@
             // labelScene
             // 
             this.labelScene.AutoSize = true;
-            this.labelScene.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelScene.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelScene.Location = new System.Drawing.Point(6, 237);
             this.labelScene.Name = "labelScene";
             this.labelScene.Size = new System.Drawing.Size(86, 18);
@@ -156,7 +161,7 @@
             // labelCheckpoint
             // 
             this.labelCheckpoint.AutoSize = true;
-            this.labelCheckpoint.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelCheckpoint.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelCheckpoint.Location = new System.Drawing.Point(6, 255);
             this.labelCheckpoint.Name = "labelCheckpoint";
             this.labelCheckpoint.Size = new System.Drawing.Size(120, 18);
@@ -166,7 +171,7 @@
             // labelComplete
             // 
             this.labelComplete.AutoSize = true;
-            this.labelComplete.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelComplete.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelComplete.Location = new System.Drawing.Point(7, 404);
             this.labelComplete.Name = "labelComplete";
             this.labelComplete.Size = new System.Drawing.Size(109, 18);
@@ -186,7 +191,7 @@
             // labelScrollCount
             // 
             this.labelScrollCount.AutoSize = true;
-            this.labelScrollCount.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelScrollCount.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelScrollCount.Location = new System.Drawing.Point(7, 357);
             this.labelScrollCount.Name = "labelScrollCount";
             this.labelScrollCount.Size = new System.Drawing.Size(121, 18);
@@ -207,7 +212,7 @@
             // labelNextSplit
             // 
             this.labelNextSplit.AutoSize = true;
-            this.labelNextSplit.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.labelNextSplit.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelNextSplit.Location = new System.Drawing.Point(5, 16);
             this.labelNextSplit.Name = "labelNextSplit";
             this.labelNextSplit.Size = new System.Drawing.Size(136, 22);
@@ -248,6 +253,7 @@
             // 
             // groupConfig
             // 
+            this.groupConfig.Controls.Add(this.groupBoxHelp);
             this.groupConfig.Controls.Add(this.buttonDeleteList);
             this.groupConfig.Controls.Add(this.buttonAddList);
             this.groupConfig.Controls.Add(this.label2);
@@ -265,6 +271,48 @@
             this.groupConfig.TabIndex = 20;
             this.groupConfig.TabStop = false;
             this.groupConfig.Text = "Configuration";
+            // 
+            // groupBoxHelp
+            // 
+            this.groupBoxHelp.Controls.Add(this.buttonScenes);
+            this.groupBoxHelp.Controls.Add(this.buttonKeywords);
+            this.groupBoxHelp.Controls.Add(this.buttonSplitList);
+            this.groupBoxHelp.Location = new System.Drawing.Point(235, 197);
+            this.groupBoxHelp.Name = "groupBoxHelp";
+            this.groupBoxHelp.Size = new System.Drawing.Size(93, 151);
+            this.groupBoxHelp.TabIndex = 11;
+            this.groupBoxHelp.TabStop = false;
+            this.groupBoxHelp.Text = "Help";
+            // 
+            // buttonScenes
+            // 
+            this.buttonScenes.Location = new System.Drawing.Point(7, 108);
+            this.buttonScenes.Name = "buttonScenes";
+            this.buttonScenes.Size = new System.Drawing.Size(75, 23);
+            this.buttonScenes.TabIndex = 2;
+            this.buttonScenes.Text = "Scenes";
+            this.buttonScenes.UseVisualStyleBackColor = true;
+            this.buttonScenes.Click += new System.EventHandler(this.buttonScenes_Click);
+            // 
+            // buttonKeywords
+            // 
+            this.buttonKeywords.Location = new System.Drawing.Point(7, 71);
+            this.buttonKeywords.Name = "buttonKeywords";
+            this.buttonKeywords.Size = new System.Drawing.Size(75, 23);
+            this.buttonKeywords.TabIndex = 1;
+            this.buttonKeywords.Text = "Keywords";
+            this.buttonKeywords.UseVisualStyleBackColor = true;
+            this.buttonKeywords.Click += new System.EventHandler(this.buttonKeywords_Click);
+            // 
+            // buttonSplitList
+            // 
+            this.buttonSplitList.Location = new System.Drawing.Point(7, 34);
+            this.buttonSplitList.Name = "buttonSplitList";
+            this.buttonSplitList.Size = new System.Drawing.Size(75, 23);
+            this.buttonSplitList.TabIndex = 0;
+            this.buttonSplitList.Text = "Split List";
+            this.buttonSplitList.UseVisualStyleBackColor = true;
+            this.buttonSplitList.Click += new System.EventHandler(this.buttonSplitList_Click);
             // 
             // buttonDeleteList
             // 
@@ -424,7 +472,8 @@
             this.groupUrn.PerformLayout();
             this.groupConfig.ResumeLayout(false);
             this.groupConfig.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.dgvSplits)).EndInit();
+            this.groupBoxHelp.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvSplits)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -463,6 +512,10 @@
         private System.Windows.Forms.Button buttonDeleteList;
         private System.Windows.Forms.Button buttonAddList;
         private System.Windows.Forms.CheckBox checkBoxTopMost;
+        private System.Windows.Forms.GroupBox groupBoxHelp;
+        private System.Windows.Forms.Button buttonScenes;
+        private System.Windows.Forms.Button buttonKeywords;
+        private System.Windows.Forms.Button buttonSplitList;
     }
 }
 

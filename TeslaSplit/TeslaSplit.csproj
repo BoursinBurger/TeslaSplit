@@ -34,11 +34,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DiffPlex">
-      <HintPath>..\..\..\..\..\..\..\Install\DiffPlex\Net40\DiffPlex.dll</HintPath>
-    </Reference>
     <Reference Include="InputSimulator">
-      <HintPath>..\..\..\..\..\..\..\Install\InputSimulator.0.1.0.0-bin\Release\InputSimulator.dll</HintPath>
+      <HintPath>..\..\..\References\InputSimulator\InputSimulator.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -59,10 +56,37 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormKeywords.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormKeywords.Designer.cs">
+      <DependentUpon>FormKeywords.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormScenes.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormScenes.Designer.cs">
+      <DependentUpon>FormScenes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSplitList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSplitList.Designer.cs">
+      <DependentUpon>FormSplitList.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormKeywords.resx">
+      <DependentUpon>FormKeywords.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormScenes.resx">
+      <DependentUpon>FormScenes.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSplitList.resx">
+      <DependentUpon>FormSplitList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
