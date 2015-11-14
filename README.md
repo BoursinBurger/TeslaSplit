@@ -50,11 +50,14 @@ Please note that the save file is not updated during three events we commonly us
 
 You can either manually split those events, or use the following three things as a substitute:
 
-1) The first game saves are made at the end of the opening cutscene when the door opens.
+1) We traditionally start time as soon as we start a new game in a new save slot.
+
+The first game saves are made at the end of the opening cutscene when the door opens.
 We have set the auto-reset detector to watch for these saves and reset the splits. 
-Shortly afterward, the game saves the event "openBarriers: 262144"
+Shortly afterward, the game saves the event "openBarriers: 262144".
+
 SDA's rules say to start the timer when you gain control of the character, so this openBarriers event
-is the perfect event to use for their timing.
+is the perfect event to use as your first split event to start the timer if you use their timing.
 
 2) You can set a split point for reaching the King's room and another for the Ende Moat scene
 after teleporting back to the tower in a 100% run.
