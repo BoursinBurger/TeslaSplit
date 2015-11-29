@@ -191,6 +191,11 @@ DefeatedBoss
   This will split when defeatedBosses changes its value.
 
 gameComplete: 1
-  This will split upon returning to the main menu after the Ende.</value>
+  This will split upon returning to the main menu after the Ende.
+
+Ende
+  Usefull for ending the run, it uses the fact that you only do a certain amount of EBH in last rooms of the game AND that the last EBH is always the moment you loose control over the character.
+  If you are doing any category that is not 100% this will split on the second EBH that you'll perform after entering King's room.
+  If you are doing a 100% run, this will split on the first EBH that you'll do after the final home sceneIndex.</value>
   </data>
 </root>
