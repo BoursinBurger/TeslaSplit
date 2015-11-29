@@ -1,17 +1,17 @@
-﻿using System;
-using System.Configuration;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using Microsoft.Win32;
-using WMPLib;
 using WindowsInput;
-using System.Text;
+using WMPLib;
 
 namespace TeslaSplit
 {
@@ -50,10 +50,16 @@ namespace TeslaSplit
         private FormKeywords frmKeywords = null;
         private FormScenes frmScenes = null;
         private FormSplitList frmSplitList = null;
-        
+
+        // EndeEvent attributs:
+        private Keys configEbhHotkey;
+        private bool EndeEvent;
+        private int ebhCount;
+
         public FormMain()
         {
             InitializeComponent();
+
             configLegacySavePath = "";
             configSplitHotkey = "";
             configSplitList = "";
@@ -84,7 +90,7 @@ namespace TeslaSplit
                 string appPath =
                         System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                 string configFile = System.IO.Path.Combine(appPath, "TeslaSplit.exe.config");
-                ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap {ExeConfigFilename = configFile};
+                ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap { ExeConfigFilename = configFile };
                 config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
 
                 configLegacySavePath = config.AppSettings.Settings["LegacySavePath"].Value;
@@ -92,13 +98,14 @@ namespace TeslaSplit
                 configSplitHotkey = config.AppSettings.Settings["SplitHotkey"].Value;
                 configResetEvents = config.AppSettings.Settings["ResetEvents"].Value;
                 configMapHotkey = config.AppSettings.Settings["mapHotkey"].Value;
+                configEbhHotkey = KeysTranslate(config.AppSettings.Settings["EbhHotkey"].Value);
                 configSplitList = config.AppSettings.Settings["SplitList"].Value;
                 configSelectedSplitsIndex = config.AppSettings.Settings["SelectedSplitsIndex"].Value;
                 configItemAnimationSkipGlove = config.AppSettings.Settings["ItemAnimationSkipGlove"].Value;
                 configItemAnimationSkipBoots = config.AppSettings.Settings["ItemAnimationSkipBoots"].Value;
                 configItemAnimationSkipCloak = config.AppSettings.Settings["ItemAnimationSkipCloak"].Value;
                 configItemAnimationSkipStaff = config.AppSettings.Settings["ItemAnimationSkipStaff"].Value;
-                
+
                 // Set up the file watchers
                 string combinedLegacyPath =
                     CombinePaths(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -106,13 +113,13 @@ namespace TeslaSplit
                 if (Directory.Exists(combinedLegacyPath))
                 {
                     fswLegacy = new FileSystemWatcher
-                                {
-                                    Path = combinedLegacyPath,
-                                    NotifyFilter = NotifyFilters.LastWrite,
-                                    Filter = "SavedGame.asset",
-                                    IncludeSubdirectories = true,
-                                    EnableRaisingEvents = false
-                                };
+                    {
+                        Path = combinedLegacyPath,
+                        NotifyFilter = NotifyFilters.LastWrite,
+                        Filter = "SavedGame.asset",
+                        IncludeSubdirectories = true,
+                        EnableRaisingEvents = false
+                    };
                     fswLegacy.Changed += FileWatcherTrigger;
                 }
 
@@ -127,13 +134,13 @@ namespace TeslaSplit
                     if (Directory.Exists(combinedSteamPath))
                     {
                         fswCloud = new FileSystemWatcher
-                                   {
-                                       Path = combinedSteamPath,
-                                       NotifyFilter = NotifyFilters.LastWrite,
-                                       Filter = "SavedGame.asset",
-                                       IncludeSubdirectories = true,
-                                       EnableRaisingEvents = false
-                                   };
+                        {
+                            Path = combinedSteamPath,
+                            NotifyFilter = NotifyFilters.LastWrite,
+                            Filter = "SavedGame.asset",
+                            IncludeSubdirectories = true,
+                            EnableRaisingEvents = false
+                        };
                         fswCloud.Changed += FileWatcherTrigger;
                     }
                 }
@@ -201,6 +208,10 @@ namespace TeslaSplit
                 MessageBox.Show(String.Format("{0}: {1}", e.GetType(), e.Message), "TeslaSplit - App Config Exception");
                 Application.Exit();
             }
+
+            // Global Input Hook for EndeEvent
+            int id = 0;     // The id of the hotkey. 
+            RegisterHotKey(this.Handle, id, (int)KeyModifier.None, configEbhHotkey.GetHashCode());
         }
 
         public static string CombinePaths(params string[] paths)
@@ -276,6 +287,8 @@ namespace TeslaSplit
 
                 // Otherwise, continue an ongoing run
                 string currentSplit = splits[splitCounter];
+                if (currentSplit == "Ende")
+                    EndeEvent = true;
                 splitFlag = false;
                 List<string> currentList = Regex.Split(currentText, "\r\n").Select(a => a.Trim()).ToList();
 
@@ -493,7 +506,7 @@ namespace TeslaSplit
             StringBuilder sbSplitList = new StringBuilder();
             foreach (SplitList sl in ListOfSplitLists)
                 sbSplitList.Append(String.Format("[{0}]{1}", sl.Name, string.Join(",", sl.Splits)));
-            
+
             config.AppSettings.Settings["SplitList"].Value = sbSplitList.ToString();
             config.AppSettings.Settings["SelectedSplitsIndex"].Value = selectedSplitsIndex.ToString();
 
@@ -529,10 +542,9 @@ namespace TeslaSplit
             VirtualKeyCode? vkc = VKCTranslate(configSplitHotkey);
             if (vkc == null)
                 return;
-
-            InputSimulator.SimulateKeyDown((VirtualKeyCode) vkc);
+            InputSimulator.SimulateKeyDown((VirtualKeyCode)vkc);
             Thread.Sleep(250);
-            InputSimulator.SimulateKeyUp((VirtualKeyCode) vkc);
+            InputSimulator.SimulateKeyUp((VirtualKeyCode)vkc);
         }
 
         private void SendPickupSkip()
@@ -542,13 +554,13 @@ namespace TeslaSplit
                 return;
 
             sbText.PrependLine(String.Format("[{0}] {1}", DateTime.Now.ToString("s"), "Sending pickup animation skip"));
-            InputSimulator.SimulateKeyDown((VirtualKeyCode) vkc);
+            InputSimulator.SimulateKeyDown((VirtualKeyCode)vkc);
             Thread.Sleep(100);
-            InputSimulator.SimulateKeyUp((VirtualKeyCode) vkc);
+            InputSimulator.SimulateKeyUp((VirtualKeyCode)vkc);
             Thread.Sleep(100);
-            InputSimulator.SimulateKeyDown((VirtualKeyCode) vkc);
+            InputSimulator.SimulateKeyDown((VirtualKeyCode)vkc);
             Thread.Sleep(100);
-            InputSimulator.SimulateKeyUp((VirtualKeyCode) vkc);
+            InputSimulator.SimulateKeyUp((VirtualKeyCode)vkc);
         }
 
         private void buttonReset_Click(object sender, EventArgs e)
@@ -1385,8 +1397,8 @@ namespace TeslaSplit
 
             SplitList newList = new SplitList
             {
-                    Name = "New Split List",
-                    Splits = new[]
+                Name = "New Split List",
+                Splits = new[]
                             {
                                     "sceneIndex: 1",
                                     "checkpointIndex: 2",
@@ -1488,8 +1500,8 @@ namespace TeslaSplit
             if (frmScenes == null || frmScenes.Text == "")
             {
                 DataTable dt = new DataTable();
-                dt.Columns.Add("SceneIndex", typeof (int));
-                dt.Columns.Add("Room Name", typeof (string));
+                dt.Columns.Add("SceneIndex", typeof(int));
+                dt.Columns.Add("Room Name", typeof(string));
                 for (int x = 0; x < scenes.Count(); x++)
                     dt.Rows.Add(x, scenes[x]);
 
@@ -1501,6 +1513,54 @@ namespace TeslaSplit
                 frmScenes.Show();
                 frmScenes.Focus();
             }
+        }
+
+        // Global Input Hook for Ende Event:
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+        enum KeyModifier
+        {
+            None = 0,
+            Alt = 1,
+            Control = 2,
+            Shift = 4,
+            WinKey = 8
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+
+            if (m.Msg == 0x0312)
+            {
+                if (EndeEvent)
+                {
+                    if (sceneIndex == 94)
+                    {
+                        if (scrollCounter == 36)
+                            return;
+                        if (ebhCount == 1)
+                        {
+                            SendSplit();
+                        }
+                        else
+                        {
+                            ebhCount++;
+                        }
+                    }
+                    else if (sceneIndex == 100)
+                    {
+                        SendSplit();
+                    }
+                }
+            }
+        }
+
+        private void FormMain_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            UnregisterHotKey(this.Handle, 0);       // Unregister hotkey with id 0 before closing the form. You might want to call this more than once with different id values if you are planning to register more than one hotkey.
         }
     }
 
